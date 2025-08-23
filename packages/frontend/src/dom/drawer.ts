@@ -3,7 +3,7 @@ import PrimeVue from "primevue/config";
 import Tooltip from "primevue/tooltip";
 import { type App, createApp } from "vue";
 
-import { Drawer } from "@/components/drawer";
+import { Drawer } from "@/components/agent";
 import { onLocationChange } from "@/dom";
 import { SDKPlugin } from "@/plugins/sdk";
 import { type FrontendSDK } from "@/types";

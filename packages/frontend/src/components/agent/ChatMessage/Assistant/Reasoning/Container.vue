@@ -6,7 +6,7 @@ import { Markdown } from "../Markdown";
 import { useReasoning } from "./useReasoning";
 
 import type { MessageState } from "@/agents/types";
-import { useAutoScroll } from "@/components/drawer/useAutoScroll";
+import { useAutoScroll } from "@/components/agent/useAutoScroll";
 
 const props = defineProps<{
   content: string;
