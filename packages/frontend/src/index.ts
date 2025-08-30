@@ -9,9 +9,12 @@ import "./styles/index.css";
 import type { FrontendSDK } from "./types";
 import App from "./views/App.vue";
 
+import { setupAgents } from "@/agents";
 import { createDOMManager } from "@/dom";
+import { setupFloat } from "@/float";
+import { setupRenaming } from "@/renaming";
 import { useAgentsStore } from "@/stores/agents";
-import { useUIStore } from "@/stores/ui";
+import { useConfigStore } from "@/stores/config";
 
 export const init = (sdk: FrontendSDK) => {
   const app = createApp(App);
@@ -34,30 +37,42 @@ export const init = (sdk: FrontendSDK) => {
     width: "100%",
   });
 
-  root.id = `plugin--shift-agents`;
+  root.id = `plugin--shift`;
 
   app.mount(root);
 
-  sdk.navigation.addPage("/shift-agents", {
+  sdk.navigation.addPage("/shift", {
     body: root,
   });
 
-  sdk.sidebar.registerItem("Shift Agents", "/shift-agents", {
+  sdk.sidebar.registerItem("Shift", "/shift", {
     icon: "fas fa-robot",
   });
 
-  sdk.replay.addToSlot("topbar", {
-    type: "Button",
-    label: "Agent",
-    onClick: () => useUIStore().toggleDrawer(),
+  setupAgents(sdk);
+  setupFloat(sdk);
+  setupRenaming(sdk);
+
+  sdk.commands.register("shift:add-to-memory", {
+    name: "Add to memory",
+    run: () => {
+      const configStore = useConfigStore();
+
+      const selection = window.getSelection();
+      if (selection === null) return;
+
+      const text = selection.toString();
+      if (text.length === 0) return;
+
+      configStore.memory += "\n" + text;
+
+      sdk.window.showToast(`Text has been saved to your Shift memory`, {
+        variant: "info",
+      });
+    },
   });
 
-  sdk.commands.register("shift-agents:toggle-drawer", {
-    name: "Toggle Shift Agents Drawer",
-    run: () => useUIStore().toggleDrawer(),
-  });
-
-  sdk.shortcuts.register("shift-agents:toggle-drawer", ["shift", "meta", "i"]);
+  sdk.shortcuts.register("shift:add-to-memory", ["shift", "m"]);
 
   const domManager = createDOMManager(sdk);
   domManager.drawer.start();

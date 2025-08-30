@@ -1,11 +1,51 @@
+import { type EditorView } from "@codemirror/view";
+
 import { type ReplaySession } from "@/agents/types";
 import { type FrontendSDK } from "@/types";
 
-export const getCurrentlySelectedReplayTabSessionId = () => {
+export const getSelectedReplayTabSessionId = () => {
   const activeTab = document.querySelector(
     '[data-is-selected="true"][data-session-id]',
   );
   return activeTab ? activeTab.getAttribute("data-session-id") : "";
+};
+
+export const getRequestEditorRequestID = () => {
+  const requestEditor = document.querySelector("[data-language=http-request]");
+
+  if (requestEditor === null) {
+    return undefined;
+  }
+
+  const root = requestEditor.closest("[data-request-id]");
+  if (root === null) {
+    return undefined;
+  }
+
+  return root.getAttribute("data-request-id") ?? undefined;
+};
+
+export const getCurrentRequestID = async (sdk: FrontendSDK) => {
+  const editorRequestID = getRequestEditorRequestID();
+  if (editorRequestID !== undefined) {
+    return editorRequestID;
+  }
+
+  const selectedSessionID = getSelectedReplayTabSessionId();
+  if (selectedSessionID === undefined || selectedSessionID === null) {
+    return undefined;
+  }
+
+  const sessionResult = await sdk.graphql.replaySessionEntries({
+    id: selectedSessionID,
+  });
+  const activeEntry = sessionResult.replaySession?.activeEntry;
+
+  if (activeEntry === undefined || activeEntry === null) {
+    return undefined;
+  }
+
+  return activeEntry.request?.id ?? undefined;
 };
 
 export type ReplayRequest =
@@ -66,4 +106,23 @@ export async function getReplaySession(
       },
     },
   } as ReplayRequest;
+}
+
+export const writeToRequestEditor = (raw: string) => {
+  const requestEditor = document.querySelector(
+    ".cm-content[data-language='http-request']",
+  ) as EditorElement | undefined;
+
+  const requestEditorView = requestEditor?.cmView?.view;
+  if (requestEditorView !== undefined) {
+    requestEditorView.dispatch({
+      changes: { from: 0, to: requestEditorView.state.doc.length, insert: raw },
+    });
+  }
+};
+
+export interface EditorElement extends Element {
+  cmView?: {
+    view: EditorView;
+  };
 }

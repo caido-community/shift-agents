@@ -4,21 +4,48 @@ import { computed, ref } from "vue";
 import { models } from "./models";
 import { defaultCustomPrompts } from "./prompts";
 
-import type { CustomPrompt, ReasoningConfig } from "@/agents/types";
+import type {
+  AISessionRenamingConfig,
+  CustomPrompt,
+  ReasoningConfig,
+} from "@/agents/types";
 import { useSDK } from "@/plugins/sdk";
 import { type PluginStorage } from "@/types";
 
+// TODO: cleanup the store, maybe split it up a bit
 export const useConfigStore = defineStore("stores.config", () => {
   const sdk = useSDK();
 
   const customPrompts = ref<CustomPrompt[]>(defaultCustomPrompts);
   const _openRouterApiKey = ref<string>("");
-  const _model = ref<string>("anthropic/claude-sonnet-4");
+  const _agentsModel = ref<string>("anthropic/claude-sonnet-4");
+  const _floatModel = ref<string>("openai/gpt-4.1");
+  const _renamingModel = ref<string>("google/gemini-flash-1.5");
   const _maxIterations = ref<number>(35);
+  const projectMemoryById = ref<Record<string, string>>({});
+  const projectHistoryById = ref<Record<string, string[]>>({});
   const reasoningConfig = ref<ReasoningConfig>({
     enabled: true,
     max_tokens: 1500,
   });
+  const _aiSessionRenaming = ref<AISessionRenamingConfig>({
+    enabled: false,
+    renameAfterSend: false,
+    instructions:
+      "Include the HTTP Verb, and a concise version of the path in the tab name. Focus on the end of the path. Include only the first 4 characters of IDs.\nExample: GET /api/v1/users/{id}/profile\nUNLESS, the current request is a graphql request, then use the operationName if present.",
+  });
+
+  const getActiveProjectId = () => {
+    const projectNameElement = document.querySelector(
+      ".c-current-project[data-project-id]",
+    );
+    if (projectNameElement === null) {
+      return "";
+    }
+    const id = projectNameElement.getAttribute("data-project-id");
+    return id ?? "";
+  };
+  const _projectId = ref<string>(getActiveProjectId());
 
   const openRouterApiKey = computed({
     get() {
@@ -30,16 +57,46 @@ export const useConfigStore = defineStore("stores.config", () => {
     },
   });
 
-  const model = computed({
+  const agentsModel = computed({
     get() {
-      return _model.value;
+      return _agentsModel.value;
     },
     set(value: string) {
-      _model.value = value;
+      _agentsModel.value = value;
       saveSettings();
     },
   });
 
+  const floatModel = computed({
+    get() {
+      return _floatModel.value;
+    },
+    set(value: string) {
+      _floatModel.value = value;
+      saveSettings();
+    },
+  });
+  const renamingModel = computed({
+    get() {
+      return _renamingModel.value;
+    },
+    set(value: string) {
+      _renamingModel.value = value;
+      saveSettings();
+    },
+  });
+  const memory = computed({
+    get() {
+      return projectMemoryById.value[_projectId.value] ?? "";
+    },
+    set(value: string) {
+      projectMemoryById.value = {
+        ...projectMemoryById.value,
+        [_projectId.value]: value,
+      };
+      saveSettings();
+    },
+  });
   const maxIterations = computed({
     get() {
       return _maxIterations.value;
@@ -50,13 +107,28 @@ export const useConfigStore = defineStore("stores.config", () => {
     },
   });
 
+  const aiSessionRenaming = computed({
+    get() {
+      return _aiSessionRenaming.value;
+    },
+    set(value: AISessionRenamingConfig) {
+      _aiSessionRenaming.value = value;
+      saveSettings();
+    },
+  });
+
   const saveSettings = async () => {
     const settings: PluginStorage = {
       openRouterApiKey: _openRouterApiKey.value,
-      model: _model.value,
+      agentsModel: _agentsModel.value,
+      floatModel: _floatModel.value,
+      renamingModel: _renamingModel.value,
       reasoningConfig: reasoningConfig.value,
       customPrompts: customPrompts.value,
       maxIterations: _maxIterations.value,
+      aiSessionRenaming: _aiSessionRenaming.value,
+      projectMemoryById: projectMemoryById.value,
+      projectHistoryById: projectHistoryById.value,
     };
     await sdk.storage.set(settings);
   };
@@ -67,8 +139,14 @@ export const useConfigStore = defineStore("stores.config", () => {
       if (settings.openRouterApiKey !== undefined) {
         _openRouterApiKey.value = settings.openRouterApiKey;
       }
-      if (settings.model !== undefined) {
-        _model.value = settings.model;
+      if (settings.agentsModel !== undefined) {
+        _agentsModel.value = settings.agentsModel;
+      }
+      if (settings.floatModel !== undefined) {
+        _floatModel.value = settings.floatModel;
+      }
+      if (settings.renamingModel !== undefined) {
+        _renamingModel.value = settings.renamingModel;
       }
       if (settings.reasoningConfig !== undefined) {
         reasoningConfig.value = settings.reasoningConfig;
@@ -78,6 +156,15 @@ export const useConfigStore = defineStore("stores.config", () => {
       }
       if (settings.maxIterations !== undefined) {
         _maxIterations.value = settings.maxIterations;
+      }
+      if (settings.aiSessionRenaming !== undefined) {
+        _aiSessionRenaming.value = settings.aiSessionRenaming;
+      }
+      if (settings.projectMemoryById !== undefined) {
+        projectMemoryById.value = settings.projectMemoryById;
+      }
+      if (settings.projectHistoryById !== undefined) {
+        projectHistoryById.value = settings.projectHistoryById;
       }
     }
   };
@@ -118,8 +205,14 @@ export const useConfigStore = defineStore("stores.config", () => {
       if (settings.openRouterApiKey !== undefined) {
         _openRouterApiKey.value = settings.openRouterApiKey;
       }
-      if (settings.model !== undefined) {
-        _model.value = settings.model;
+      if (settings.agentsModel !== undefined) {
+        _agentsModel.value = settings.agentsModel;
+      }
+      if (settings.floatModel !== undefined) {
+        _floatModel.value = settings.floatModel;
+      }
+      if (settings.renamingModel !== undefined) {
+        _renamingModel.value = settings.renamingModel;
       }
       if (settings.reasoningConfig !== undefined) {
         reasoningConfig.value = settings.reasoningConfig;
@@ -130,24 +223,84 @@ export const useConfigStore = defineStore("stores.config", () => {
       if (settings.maxIterations !== undefined) {
         _maxIterations.value = settings.maxIterations;
       }
+      if (settings.aiSessionRenaming !== undefined) {
+        _aiSessionRenaming.value = settings.aiSessionRenaming;
+      }
+      if (settings.projectMemoryById !== undefined) {
+        projectMemoryById.value = settings.projectMemoryById;
+      }
+      if (settings.projectHistoryById !== undefined) {
+        projectHistoryById.value = settings.projectHistoryById;
+      }
     }
   });
+
+  const getHistory = () => {
+    return projectHistoryById.value[_projectId.value] ?? [];
+  };
+
+  const addHistoryEntry = async (entry: string) => {
+    const id = _projectId.value;
+    const current = projectHistoryById.value[id] ?? [];
+    const next = [...current, entry];
+    if (next.length > 20) {
+      next.splice(0, next.length - 20);
+    }
+    projectHistoryById.value = { ...projectHistoryById.value, [id]: next };
+    await saveSettings();
+  };
+
+  const monitorProjectChanges = async () => {
+    try {
+      const iterator = sdk.graphql.updatedProject();
+      for await (const _ of iterator) {
+        // TODO: figure out a better way
+        setTimeout(() => {
+          _projectId.value = getActiveProjectId();
+        }, 100);
+      }
+    } catch {
+      // do nothing
+    }
+  };
+
+  monitorProjectChanges();
 
   const selectedModel = computed(() => {
     return models
       .flatMap((group) => group.items)
-      .find((item) => item.id === _model.value);
+      .find((item) => item.id === _agentsModel.value);
   });
+
+  const setAISessionRenaming = async (config: AISessionRenamingConfig) => {
+    _aiSessionRenaming.value = config;
+    await saveSettings();
+  };
+
+  const updateAISessionRenaming = async (
+    updates: Partial<AISessionRenamingConfig>,
+  ) => {
+    _aiSessionRenaming.value = { ..._aiSessionRenaming.value, ...updates };
+    await saveSettings();
+  };
 
   return {
     openRouterApiKey,
     maxIterations,
-    model,
+    agentsModel,
+    floatModel,
+    renamingModel,
+    memory,
     models,
     reasoningConfig,
+    aiSessionRenaming,
     selectedModel,
     setReasoningConfig,
     updateReasoningConfig,
+    getHistory,
+    addHistoryEntry,
+    setAISessionRenaming,
+    updateAISessionRenaming,
     customPrompts,
     addCustomPrompt,
     updateCustomPrompt,

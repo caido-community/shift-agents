@@ -1,56 +1,90 @@
 <script setup lang="ts">
-import Card from "primevue/card";
+import Button from "primevue/button";
+import IconField from "primevue/iconfield";
+import InputIcon from "primevue/inputicon";
+import InputNumber from "primevue/inputnumber";
+import InputText from "primevue/inputtext";
+import Textarea from "primevue/textarea";
 
-import { OpenRouterContainer } from "./openrouter";
-import { PromptsContainer } from "./prompts";
+import { useForm } from "./useForm";
+
+import { useConfigStore } from "@/stores/config";
+
+const {
+  isApiKeyVisible,
+  isValidating,
+  toggleApiKeyVisibility,
+  validateApiKey,
+} = useForm();
+
+const config = useConfigStore();
 </script>
 
 <template>
-  <div class="flex flex-col h-full gap-1 overflow-hidden">
-    <Card
-      class="h-fit"
-      :pt="{
-        body: { class: 'h-fit p-0' },
-        content: { class: 'h-fit flex flex-col' },
-      }"
-    >
-      <template #content>
-        <div class="flex justify-between items-center p-4">
-          <div>
-            <h3 class="text-lg font-semibold">Shift Agents</h3>
-            <p class="text-sm text-surface-300">
-              Shift Agents is a tool that allows you to delegate replay sessions
-              into agent hands
-            </p>
-          </div>
-        </div>
-      </template>
-    </Card>
+  <div class="flex flex-col gap-6 p-4">
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-col">
+        <label class="text-base font-medium">OpenRouter API Key</label>
+        <p class="text-sm text-surface-400">
+          Enter your OpenRouter API key to enable AI model access.
+        </p>
+      </div>
 
-    <div class="flex flex-col h-full gap-1 overflow-hidden">
-      <Card
-        class="h-1/2"
-        :pt="{
-          body: { class: 'h-full p-0' },
-          content: { class: 'h-full flex flex-col overflow-hidden' },
-        }"
-      >
-        <template #content>
-          <PromptsContainer />
-        </template>
-      </Card>
+      <div class="flex gap-3">
+        <IconField class="flex-1">
+          <InputIcon class="fas fa-key" />
+          <InputText
+            v-model="config.openRouterApiKey"
+            :type="isApiKeyVisible ? 'text' : 'password'"
+            placeholder="Enter API key"
+            class="w-full"
+          />
+        </IconField>
+        <Button
+          :icon="isApiKeyVisible ? 'fas fa-eye-slash' : 'fas fa-eye'"
+          severity="secondary"
+          outlined
+          @click="toggleApiKeyVisibility"
+        />
+        <Button
+          icon="fas fa-check-circle"
+          label="Validate"
+          :disabled="!config.openRouterApiKey?.trim()"
+          :loading="isValidating"
+          @click="validateApiKey"
+        />
+      </div>
+    </div>
 
-      <Card
-        class="h-1/2 min-h-fit"
-        :pt="{
-          body: { class: 'h-full p-0' },
-          content: { class: 'h-full flex flex-col' },
-        }"
-      >
-        <template #content>
-          <OpenRouterContainer />
-        </template>
-      </Card>
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-col">
+        <label class="text-base font-medium">Max Iterations</label>
+        <p class="text-sm text-surface-400">
+          Enter the maximum number of iterations for AI model.
+        </p>
+      </div>
+
+      <InputNumber
+        v-model="config.maxIterations"
+        placeholder="Enter max iterations"
+      />
+    </div>
+
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-col">
+        <label class="text-base font-medium">Memory</label>
+        <p class="text-sm text-surface-400">
+          Project-scoped notes for the AI to use. You can store details about
+          the target app, IDs for certain objects or accounts, etc.
+        </p>
+      </div>
+
+      <Textarea
+        v-model="config.memory"
+        placeholder="Enter memory content"
+        rows="5"
+        class="w-full"
+      />
     </div>
   </div>
 </template>

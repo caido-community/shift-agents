@@ -39,7 +39,7 @@ export const useSelector = () => {
       .filter((p): p is NonNullable<typeof p> => p !== undefined),
   );
 
-  const listRef = ref<HTMLDivElement | null>(null);
+  const listRef = ref<HTMLDivElement | undefined>(undefined);
   const hasOverflow = ref(false);
   const { arrivedState } = useScroll(listRef);
   const showLeft = computed(() => hasOverflow.value && !arrivedState.left);
@@ -47,7 +47,7 @@ export const useSelector = () => {
 
   const updateOverflow = () => {
     const el = listRef.value;
-    if (el === null) {
+    if (el === undefined) {
       hasOverflow.value = false;
       return;
     }
@@ -58,7 +58,7 @@ export const useSelector = () => {
 
   const scrollByAmount = (amount: number) => {
     const el = listRef.value;
-    if (el !== null) {
+    if (el !== undefined) {
       el.scrollBy({ left: amount, behavior: "smooth" });
     }
   };
@@ -76,7 +76,7 @@ export const useSelector = () => {
   let stopWindowListener: (() => void) | undefined;
   const bindScrollHandlers = () => {
     const el = listRef.value;
-    if (el !== null) {
+    if (el !== undefined) {
       el.addEventListener("scroll", onScroll);
     }
     if (stopWindowListener === undefined) {
@@ -84,7 +84,7 @@ export const useSelector = () => {
     }
     requestAnimationFrame(() => {
       updateOverflow();
-      if (hasOverflow.value && el !== null) {
+      if (hasOverflow.value && el !== undefined) {
         el.scrollTo({ left: el.scrollWidth, top: 0, behavior: "auto" });
       }
     });
@@ -92,7 +92,7 @@ export const useSelector = () => {
 
   const unbindScrollHandlers = () => {
     const el = listRef.value;
-    if (el !== null) {
+    if (el !== undefined) {
       el.removeEventListener("scroll", onScroll);
     }
     if (stopWindowListener !== undefined) {
@@ -108,7 +108,7 @@ export const useSelector = () => {
       await nextTick();
       updateOverflow();
       const el = listRef.value;
-      if (hasOverflow.value && el !== null) {
+      if (hasOverflow.value && el !== undefined) {
         el.scrollTo({ left: el.scrollWidth, top: 0, behavior: "auto" });
       }
     },

@@ -8,7 +8,7 @@ import {
   type ToolContext,
 } from "@/agents/types";
 import { type FrontendSDK } from "@/types";
-import { getReplaySession } from "@/utils";
+import { getReplaySession, writeToRequestEditor } from "@/utils";
 
 export async function createAgent({
   replaySessionId,
@@ -61,6 +61,19 @@ function buildToolContext({
       updateRequestRaw: (updater) => {
         const newRaw = updater(requestState.raw);
         requestState.raw = newRaw;
+
+        // If user is on replay tab and has this tab open, update the request editor
+        if (location.hash === "#/replay") {
+          const selectedTab = document.querySelector(
+            "[data-is-selected=true]",
+          ) as HTMLElement | undefined;
+          if (selectedTab !== undefined) {
+            const selectedID = selectedTab.getAttribute("data-session-id");
+            if (selectedID !== undefined && selectedID === initialSession.id) {
+              writeToRequestEditor(newRaw);
+            }
+          }
+        }
 
         return true;
       },

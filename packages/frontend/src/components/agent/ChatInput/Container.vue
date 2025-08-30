@@ -57,7 +57,7 @@ watch(
 
     <div class="flex justify-between gap-2 items-center">
       <div class="flex gap-2">
-        <ModelSelector />
+        <ModelSelector variant="chat" />
       </div>
 
       <div class="flex items-center gap-2">

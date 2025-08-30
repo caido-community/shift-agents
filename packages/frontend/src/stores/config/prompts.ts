@@ -56,7 +56,7 @@ Common regex trick:
 
 Often applications forget to escape the dot character in their regex patterns, leaving wildcards that can be exploited.
 
-For example, if an app uses a regex like \`https://admin\.test\.com/\` but forgets to escape the dots:
+For example, if an app uses a regex like \`https://admin\\.test\\.com/\` but forgets to escape the dots:
 \`https://admin.test.com/\` - the dots become wildcards that match any character
 
 This can be bypassed with:

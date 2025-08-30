@@ -1,3 +1,5 @@
+import { type Component } from "vue";
+
 export type AgentConfig = {
   id: string;
   maxIterations: number;
@@ -21,10 +23,12 @@ export type ModelItem = {
   id: string;
   isRecommended?: boolean;
   isReasoningModel?: boolean;
+  onlyFor?: "float" | "chat" | "renaming";
 };
 
 export type ModelGroup = {
   label: string;
+  icon: Component;
   items: ModelItem[];
 };
 
@@ -33,4 +37,10 @@ export type CustomPrompt = {
   title: string;
   content: string;
   isDefault?: boolean;
+};
+
+export type AISessionRenamingConfig = {
+  enabled: boolean;
+  renameAfterSend: boolean;
+  instructions: string;
 };

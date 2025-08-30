@@ -9,6 +9,12 @@ const AddTodoSchema = z.object({
     .string()
     .min(1)
     .describe("The content of the todo item. Keep it short and concise."),
+  internal_content: z
+    .string()
+    .optional()
+    .describe(
+      "This is optional internal content that only you see, this is not visible to the user. Use this if you want to track some more information about the todo item, like the request schema, endpoint, parameter you want to send, etc."
+    ),
 });
 
 export const addTodoTool = tool({
@@ -19,6 +25,7 @@ export const addTodoTool = tool({
     const todo = {
       id: input.id,
       content: input.content,
+      internal_content: input.internal_content,
       status: "pending" as const,
     };
     context.todoManager.addTodo(todo);

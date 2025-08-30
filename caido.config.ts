@@ -9,11 +9,11 @@ import prefixwrap from "postcss-prefixwrap";
 // @ts-expect-error no types
 import tailwindConfig from "./packages/frontend/tailwind.config.js";
 
-const id = "shift-agents";
+const id = "shift";
 export default defineConfig({
   id,
-  name: "Shift Agents",
-  description: "Delegate your work to Shift Agents",
+  name: "Shift",
+  description: "Delegate your work to Shift",
   version: "1.0.0",
   author: {
     name: "Caido Labs Inc.",

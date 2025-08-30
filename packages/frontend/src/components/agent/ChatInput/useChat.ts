@@ -70,6 +70,7 @@ export const useChat = () => {
 
     const message = inputMessage.value.trim();
     inputMessage.value = "";
+
     sendMessage(message);
   };
 

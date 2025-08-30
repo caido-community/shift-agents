@@ -5,87 +5,25 @@ import DataTable from "primevue/datatable";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
-import { ref, toRefs } from "vue";
 
-import type { CustomPrompt } from "@/agents/types";
-import { useConfigStore } from "@/stores/config";
+import { useForm } from "./useForm";
 
-const configStore = useConfigStore();
-const { customPrompts } = toRefs(configStore);
-
-const showDialog = ref(false);
-const editingPrompt = ref<CustomPrompt | undefined>(undefined);
-const promptTitle = ref("");
-const promptContent = ref("");
-
-const openCreateDialog = () => {
-  editingPrompt.value = undefined;
-  promptTitle.value = "";
-  promptContent.value = "";
-  showDialog.value = true;
-};
-
-const openEditDialog = (prompt: CustomPrompt) => {
-  if (prompt.isDefault !== undefined) return;
-
-  editingPrompt.value = prompt;
-  promptTitle.value = prompt.title;
-  promptContent.value = prompt.content;
-  showDialog.value = true;
-};
-
-const closeDialog = () => {
-  showDialog.value = false;
-  editingPrompt.value = undefined;
-  promptTitle.value = "";
-  promptContent.value = "";
-};
-
-const savePrompt = async () => {
-  if (promptTitle.value.trim() === "" || promptContent.value.trim() === "") {
-    return;
-  }
-
-  if (editingPrompt.value) {
-    await configStore.updateCustomPrompt({
-      ...editingPrompt.value,
-      title: promptTitle.value.trim(),
-      content: promptContent.value.trim(),
-    });
-  } else {
-    await configStore.addCustomPrompt({
-      id: crypto.randomUUID(),
-      title: promptTitle.value.trim(),
-      content: promptContent.value.trim(),
-    });
-  }
-
-  closeDialog();
-};
-
-const deletePrompt = async (id: string, isDefault?: boolean) => {
-  if (isDefault !== undefined) return;
-  await configStore.deleteCustomPrompt(id);
-};
+const {
+  customPrompts,
+  showDialog,
+  editingPrompt,
+  promptTitle,
+  promptContent,
+  openEditDialog,
+  openCreateDialog,
+  closeDialog,
+  savePrompt,
+  deletePrompt,
+} = useForm();
 </script>
 
 <template>
   <div class="flex flex-col h-full overflow-hidden">
-    <div class="flex justify-between items-center p-4">
-      <div class="flex flex-col gap-1">
-        <h4 class="text-md font-medium text-surface-300">Custom Prompts</h4>
-        <p class="text-sm text-surface-400">
-          Define reusable prompts for your AI interactions
-        </p>
-      </div>
-      <Button
-        icon="fas fa-plus"
-        label="Add Prompt"
-        size="small"
-        @click="openCreateDialog"
-      />
-    </div>
-
     <div class="flex-1 overflow-hidden">
       <div
         v-if="customPrompts.length === 0"
@@ -160,6 +98,15 @@ const deletePrompt = async (id: string, isDefault?: boolean) => {
           </Column>
         </DataTable>
       </div>
+    </div>
+
+    <div class="h-10 w-full flex justify-end items-center p-4">
+      <Button
+        icon="fas fa-plus"
+        label="Add Prompt"
+        size="small"
+        @click="openCreateDialog"
+      />
     </div>
 
     <Dialog

@@ -1,8 +1,17 @@
 import { type ModelGroup } from "@/agents/types";
+import {
+  AnthropicIcon,
+  DeepseekIcon,
+  GoogleIcon,
+  OpenAIIcon,
+  QwenIcon,
+  XAIIcon,
+} from "@/components/agent/ChatInput/ModelSelector/icons";
 
 export const models: ModelGroup[] = [
   {
     label: "Anthropic",
+    icon: AnthropicIcon,
     items: [
       {
         name: "Claude 4 Sonnet",
@@ -25,15 +34,11 @@ export const models: ModelGroup[] = [
   },
   {
     label: "OpenAI",
+    icon: OpenAIIcon,
     items: [
       {
         name: "GPT 5",
         id: "openai/gpt-5",
-        isReasoningModel: true,
-      },
-      {
-        name: "GPT 5 Nano",
-        id: "openai/gpt-5-nano",
         isReasoningModel: true,
       },
       {
@@ -42,18 +47,20 @@ export const models: ModelGroup[] = [
         isReasoningModel: true,
       },
       {
-        name: "GPT 4.1",
-        id: "openai/gpt-4.1",
+        name: "GPT 5 Nano",
+        id: "openai/gpt-5-nano",
         isReasoningModel: true,
       },
       {
-        name: "GPT OOS 120B",
-        id: "openai/gpt-oss-120b",
+        name: "GPT 4.1",
+        id: "openai/gpt-4.1",
+        isReasoningModel: true,
       },
     ],
   },
   {
     label: "Google",
+    icon: GoogleIcon,
     items: [
       {
         name: "Gemini 2.5 Pro",
@@ -70,10 +77,26 @@ export const models: ModelGroup[] = [
         id: "google/gemini-2.5-flash-lite",
         isRecommended: true,
       },
+      {
+        name: "Gemini 1.5 Flash",
+        id: "google/gemini-flash-1.5",
+        onlyFor: "renaming",
+      },
+    ],
+  },
+  {
+    label: "xAI",
+    icon: XAIIcon,
+    items: [
+      {
+        name: "Grok Code Fast",
+        id: "x-ai/grok-code-fast-1",
+      },
     ],
   },
   {
     label: "DeepSeek",
+    icon: DeepseekIcon,
     items: [
       {
         name: "DeepSeek R1",
@@ -88,17 +111,8 @@ export const models: ModelGroup[] = [
     ],
   },
   {
-    label: "Moonshot",
-    items: [
-      {
-        name: "Kimi K2",
-        isReasoningModel: true,
-        id: "moonshotai/kimi-k2",
-      },
-    ],
-  },
-  {
     label: "Qwen",
+    icon: QwenIcon,
     items: [
       {
         name: "Qwen3 Coder",

@@ -50,13 +50,13 @@ export class ClientSideChatTransport implements ChatTransport<UIMessage> {
     } & {
       trigger: "submit-message" | "submit-tool-result" | "regenerate-message";
       messageId?: string;
-    } & ChatRequestOptions,
+    } & ChatRequestOptions
   ): Promise<ReadableStream<UIMessageChunk>> {
     const { abortSignal, messages } = options;
 
     const initialSession = await getReplaySession(
       this.toolContext.sdk,
-      this.toolContext.replaySession.id,
+      this.toolContext.replaySession.id
     );
     if (initialSession.kind === "Error") {
       throw new Error(initialSession.error);
@@ -83,7 +83,7 @@ export class ClientSideChatTransport implements ChatTransport<UIMessage> {
       },
     });
 
-    const model = openrouter(configStore.model);
+    const model = openrouter(configStore.agentsModel);
     const stream = createUIMessageStream<CustomUIMessage>({
       execute: ({ writer }) => {
         const result = streamText({
@@ -121,6 +121,7 @@ export class ClientSideChatTransport implements ChatTransport<UIMessage> {
                   content: contextMessages({
                     currentRequest: this.toolContext.replaySession,
                     todoManager: this.toolContext.todoManager,
+                    memory: configStore.memory,
                   }),
                 },
               ],
@@ -146,7 +147,7 @@ export class ClientSideChatTransport implements ChatTransport<UIMessage> {
               "[Shift Agents] Error: " + errorText,
               {
                 variant: "error",
-              },
+              }
             );
 
             console.error(error);
@@ -183,7 +184,7 @@ export class ClientSideChatTransport implements ChatTransport<UIMessage> {
               return {};
             },
             sendReasoning: true,
-          }),
+          })
         );
       },
     });
@@ -191,6 +192,7 @@ export class ClientSideChatTransport implements ChatTransport<UIMessage> {
     return stream;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-restricted-types
   reconnectToStream(): Promise<ReadableStream<UIMessageChunk> | null> {
     return Promise.resolve(null);
   }
@@ -199,53 +201,64 @@ export class ClientSideChatTransport implements ChatTransport<UIMessage> {
 function contextMessages({
   currentRequest,
   todoManager,
+  memory,
 }: {
   currentRequest: ReplaySession;
   todoManager: TodoManager;
+  memory: string;
 }): string {
   let contextContent =
     "This message gets automatically attached. Here is the current context about the environment and replay session:\n\n";
 
   contextContent += `<|current_request|>
-The HTTP request you are analyzing:
-<|raw|>${currentRequest.request.raw}</|raw|>
-<|host|>${currentRequest.request.host}</|host|>
-<|port|>${currentRequest.request.port}</|port|>
-</|current_request|>
-\n\n`;
+    The HTTP request you are analyzing:
+    <|raw|>${currentRequest.request.raw}</|raw|>
+    <|host|>${currentRequest.request.host}</|host|>
+    <|port|>${currentRequest.request.port}</|port|>
+    </|current_request|>
+    \n\n`;
+
+  if (memory.trim()) {
+    contextContent += `<|memory|>
+    ${memory.trim()}
+    </|memory|>
+    \n\n`;
+  }
 
   const allTodos = todoManager.getTodos();
   if (allTodos.length > 0) {
     const pendingTodos = allTodos.filter((todo) => todo.status === "pending");
     const completedTodos = allTodos.filter(
-      (todo) => todo.status === "completed",
+      (todo) => todo.status === "completed"
     );
 
-    contextContent += `<todos>
-Current status of todos:`;
-
+    contextContent += `<todos> Current status of todos:`;
     if (completedTodos.length > 0) {
       contextContent += `
-
-Completed todos:
-${completedTodos
-  .map((todo) => `- [x] ${todo.content} (ID: ${todo.id})`)
-  .join("\n")}`;
+          Completed todos:
+          ${completedTodos
+            .map((todo) => `- [x] ${todo.content} (ID: ${todo.id})`)
+            .join("\n")}`;
     }
 
     if (pendingTodos.length > 0) {
       contextContent += `
-
-Pending todos:
-${pendingTodos
-  .map((todo) => `- [ ] ${todo.content} (ID: ${todo.id})`)
-  .join("\n")}`;
+        Pending todos:
+        ${pendingTodos
+          .map(
+            (todo) =>
+              `- [ ] ${todo.content} (ID: ${todo.id})${
+                todo.internal_content
+                  ? ` - Internal content: \n"""\n${todo.internal_content}\n"""`
+                  : ""
+              }`
+          )
+          .join("\n")}`;
     }
 
     contextContent += `
-
-You can mark pending todos as finished using the todo tool with their IDs.
-</todos>\n\n`;
+      You can mark pending todos as finished using the todo tool with their IDs.
+      </todos>\n\n`;
   }
 
   return contextContent.trim();
@@ -258,7 +271,7 @@ function buildSystemPrompt(agentId: string) {
   const selectedPromptsIds = uiStore.getSelectedPrompts(agentId);
 
   const selectedPrompts = configStore.customPrompts.filter((prompt) =>
-    selectedPromptsIds.includes(prompt.id),
+    selectedPromptsIds.includes(prompt.id)
   );
 
   let prompt = `<system_prompt>${BASE_SYSTEM_PROMPT}</system_prompt>`;
