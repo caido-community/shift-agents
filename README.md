@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> Shit agent has been integrated into Shift 1.0.0, visit [the shift repository](https://github.com/caido-community/shift).
+
 # Shift Agents
 
 Shift Agents, the new micro-agent framework for Caido users. 
